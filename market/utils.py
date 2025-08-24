@@ -318,7 +318,7 @@ def generate_arrival_praises(market_name: str, dong: str | None, distance_m: int
 
     # 서비스 핵심 메시지 요약(프롬프트에 주입)
     service_pitch = (
-        "쌍문동의 동네 마트를 디지털로 연결하여 사용자가 직접 걷고 직접 사고 직접 건강해지는 "
+        "동네 마트를 디지털로 연결하여 사용자가 직접 걷고 직접 사고 직접 건강해지는 "
         "걷기형 로컬 장보기 플랫폼. 걷기·소비·건강·지역경제를 '나의 한 끼 식사'로 연결. "
         "디지털 플랫폼을 지역에게 돌려주는 상생 모델."
     )
@@ -326,6 +326,7 @@ def generate_arrival_praises(market_name: str, dong: str | None, distance_m: int
     user_prompt = (
         f"장소: {dong or ''} {market_name}\n"
         f"사용자는 총 {distance_m or 0}m를 걸어 도착했어.\n"
+        f"현재 요일과 시간도 함께 반영해줘"
         f"아래 서비스 특징을 바탕으로 사용자에게 칭찬과 격려 문구 2줄을 만들어줘:\n"
         f"{service_pitch}\n"
         "두 줄은 줄바꿈으로 구분하고, 형식 규칙을 반드시 지켜."
