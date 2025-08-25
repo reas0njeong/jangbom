@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from .utils import *
 from .models import *
 from market.models import ShoppingList, ShoppingListIngredient
@@ -14,7 +14,7 @@ from django.http import JsonResponse, HttpResponseBadRequest
 from openai import OpenAI
 from typing import List
 from django.core.cache import cache
-import hashlib
+import hashlib, logging
 from django.utils.html import escape
 from typing import Iterable, List, Sequence, Optional, Set, Tuple, Dict, Any
 from typing import List
@@ -639,48 +639,76 @@ def recipe_ai(request):
         'total_point': total_point,
     })
 
-def generate_recipe_chat(ingredient_name: str, followup: str | None = None) -> str:
-    """
-    내부 통일용 래퍼. 프로젝트에 이미 있는 generate_tip_text를 그대로 재사용.
-    (별도의 모델 호출 로직을 쓰고 싶으면 이 함수만 바꾸면 됨)
-    """
-    return generate_tip_text(ingredient_name, followup=followup)
 
 @login_required
 @require_GET
 def ingredient_idea_page(request):
     """
-    페이지: ‘{name}로 이런 요리를 할 수 있어요’ + 채팅
+    페이지 입장 시, 해당 재료(name)에 대한 대화 히스토리와 캐시를 초기화한다.
+    (이전 재료의 히스토리 찌꺼기가 섞이지 않도록 다른 재료 히스토리도 함께 정리)
     """
     name = (request.GET.get("name") or "").strip()
     if not name:
         return HttpResponseBadRequest("name required")
+
+    # 현재 재료의 히스토리/캐시 초기화
+    sess_key = f"idea_hist:{name.lower()}"
+    cache_key = f"idea:{name.lower()}"
+    request.session.pop(sess_key, None)
+    cache.delete(cache_key)
+
+    # (선택) 다른 재료 히스토리까지 모두 정리
+    for k in list(request.session.keys()):
+        if k.startswith("idea_hist:") and k != sess_key:
+            request.session.pop(k, None)
+
+    request.session.modified = True
+
     return render(request, "food/ingredient_idea.html", {"name": name})
+
 
 @login_required
 @require_GET
 def ingredient_idea_api(request):
-    """
-    AJAX: 초기 아이디어 or 후속 질문 답변
-    - params: name=토마토, q=사용자질문(없으면 초기 추천)
-    - return: {ok: True, text: "..."} 형태
-    """
     name = (request.GET.get("name") or "").strip()
     q    = (request.GET.get("q") or "").strip()
     if not name:
         return JsonResponse({"ok": False, "error": "name required"}, status=400)
 
-    if q:
-        text = generate_recipe_chat(name, followup=q)
+    sess_key = f"idea_hist:{name.lower()}"
+    hist = request.session.get(sess_key, [])
+
+    try:
+        if q:
+            text = generate_recipe_chat(name, followup=q, history=hist)
+
+            hist.extend([
+                {"role": "user", "content": f"재료: {name}\n질문: {q}"},
+                {"role": "assistant", "content": text},
+            ])
+            request.session[sess_key] = hist[-20:]
+            request.session.modified = True
+            return JsonResponse({"ok": True, "text": text})
+
+        # ---- 초기: nocache 지원 ----
+        nocache = request.GET.get("nocache") == "1"
+        key = f"idea:{name.lower()}"
+        text = None if nocache else cache.get(key)
+        cache_hit = text is not None
+        if text is None:
+            text = generate_recipe_chat(name)
+            cache.set(key, text, 60 * 60 * 24)
+
+        if not hist:
+            request.session[sess_key] = [{"role": "assistant", "content": text}]
+            request.session.modified = True
+
+        print(f"[idea_api][init] name={name} cache_hit={cache_hit} resp.head={text[:80].replace('\\n',' ')}")
         return JsonResponse({"ok": True, "text": text})
 
-    # 초기 추천은 캐시하여 재호출 줄이기
-    key = f"idea:{name.lower()}"
-    text = cache.get(key)
-    if text is None:
-        text = generate_recipe_chat(name)
-        cache.set(key, text, 60 * 60 * 24)  # 24h
-    return JsonResponse({"ok": True, "text": text})
+    except Exception as e:
+        logger.exception("ingredient_idea_api error (name=%s, q=%s)", name, q)
+        return JsonResponse({"ok": False, "error": f"{type(e).__name__}: {e}"}, status=502)
 
 
 # =============================================================================
