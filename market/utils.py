@@ -108,7 +108,7 @@ def get_travel_info(user_lat: float, user_lng: float, market_lat: float, market_
         duration_s = max(60, int(distance_m / 80 * 60))
 
     expected_min = math.ceil(duration_s / 60)
-    point_earned = round((distance_m / 1000) * 100)  # 기존 규칙 유지
+    point_earned = round(expected_min)
     return expected_min, distance_m, point_earned
 
 
