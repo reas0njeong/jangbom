@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.cache import never_cache
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
@@ -9,7 +10,7 @@ from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest
 from django.db.models import Sum, Value, IntegerField
 from django.db.models.functions import Coalesce
 from django.core.cache import cache
-import json, random
+import json, random, logging
 from decimal import Decimal
 from .services.route_service import route_user_to_market
 from .models import *
@@ -293,34 +294,50 @@ def map_direction_view(request):
 # D. 도착 화면 & 재료 선택 저장
 # =============================================================================
 
+log = logging.getLogger(__name__)
+
+@never_cache
 @login_required
 def market_arrival_view(request, shoppinglist_id):
     """
     [마켓 도착 화면]
     - 이동정보(분/미터/포인트)와 재료 매칭 결과 표시
     - AI 칭찬 문구는 실패 시 기본 2줄로 폴백
+    - 매 요청마다 재계산/재생성 & 캐시 금지
     """
     user = request.user
     shopping_list = get_object_or_404(ShoppingList, id=shoppinglist_id, user=user)
     market = shopping_list.market
 
+    # 1) 이동정보는 매 요청마다 재계산
     expected_time, distance_m, point_earned = get_travel_info(
         user.latitude, user.longitude, market.latitude, market.longitude
     )
 
+    # 2) 재료 매칭도 매 요청마다 실행
     shopping_ingredients_set = get_latest_shopping_ingredients(user)
     matched_ingredients, unmatched_ingredients = match_ingredients(market, shopping_ingredients_set)
 
     items_count = cart_items_count(user)
     total_point = get_user_total_point(user)
 
-    # AI 칭찬 문구 2줄 생성 (에러 시 기본 문구)
+    # 3) AI 칭찬 문구 2줄 생성 (에러 시 기본 문구)
     try:
-        praise_lines = generate_arrival_praises(market.name, getattr(market, "dong", None), distance_m)
+        praise_lines = generate_arrival_praises(
+            market.name,
+            getattr(market, "dong", None),
+            distance_m
+        )
         if len(praise_lines) < 2:
             raise ValueError("not enough lines")
     except Exception:
         praise_lines = ["지역 경제를 살린 쇼핑", "탄소 없는 도보 쇼핑"]
+
+    # 4) 디버그: 실제 들어간 값 확인 (문구 고정 이슈 추적용)
+    log.info(
+        "[arrival] market=%s dong=%s distance_m=%s sl.id=%s",
+        market.name, getattr(market, "dong", None), distance_m, shopping_list.id
+    )
 
     context = {
         'user': user,
@@ -335,7 +352,13 @@ def market_arrival_view(request, shoppinglist_id):
         'total_point': total_point,
         'praise_lines': praise_lines,
     }
-    return render(request, 'market/market_arrival.html', context)
+
+    # 5) 브라우저/프록시 캐시 완전 차단
+    resp = render(request, 'market/market_arrival.html', context)
+    resp['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    resp['Pragma'] = 'no-cache'
+    resp['Expires'] = '0'
+    return resp
 
 
 @login_required
