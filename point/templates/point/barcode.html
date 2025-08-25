@@ -23,9 +23,12 @@
         </div>
 
         <!-- 앱 자체 상단바 -->
-        <div class="app-top-bar">
-          <img class="top-back" src="{% static 'img/chevron-x(gray).svg' %}" alt="뒤로 가기" />
-        </div>
+        <a href="javascript:window.history.back()">
+          <div class="app-top-bar">
+            <img class="top-back" src="{% static 'img/chevron-x(gray).svg' %}" alt="뒤로 가기" />
+          </div>
+        </a>
+
 
         <div class="title-set">
           <h2 class="app-title">장봄 포인트</h2>
