@@ -703,7 +703,6 @@ def ingredient_idea_api(request):
             request.session[sess_key] = [{"role": "assistant", "content": text}]
             request.session.modified = True
 
-        print(f"[idea_api][init] name={name} cache_hit={cache_hit} resp.head={text[:80].replace('\\n',' ')}")
         return JsonResponse({"ok": True, "text": text})
 
     except Exception as e:
