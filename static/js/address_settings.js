@@ -1,3 +1,5 @@
+
+
 // 검색창 placeholder 숨기기 전용
 (() => {
   document.addEventListener("DOMContentLoaded", () => {

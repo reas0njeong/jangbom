@@ -1,36 +1,36 @@
-{% load static %}
+
 <!DOCTYPE html>
 <html lang="ko">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="{% static 'style.css' %}" />
-    <link rel="stylesheet" href="{% static 'css/address_pick_map.css' %}" />
+    <link rel="stylesheet" href="/static/style.css" />
+    <link rel="stylesheet" href="/static/css/address_pick_map.css" />
     <title>지도에서 위치 확인</title>
 
-    {% if kakao_js_key %}
-      {% comment %} kakao maps sdk {% endcomment %}
-      <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_js_key }}&libraries=services"></script>
-    {% endif %}
+    
+      
+      <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=76f82f07855a011175bb9d3ac5fe7cbd&libraries=services"></script>
+    
 
   </head>
   <body>
     <div class="container">
       <div class="box">
-        {% comment %} 상단바 {% endcomment %}
+        
         <div class="status-bar">
           <p>19:20</p>
           <div class="status1">
-            <img class="status2" src="{% static 'img/reception.svg' %}" alt="reception" />
-            <img class="status2" src="{% static 'img/wifi.svg' %}" alt="wifi" />
-            <img class="status2" src="{% static 'img/battery.svg' %}" alt="battery" />
+            <img class="status2" src="/static/img/reception.svg" alt="reception" />
+            <img class="status2" src="/static/img/wifi.svg" alt="wifi" />
+            <img class="status2" src="/static/img/battery.svg" alt="battery" />
           </div>
         </div>
 
-        {% comment %} 앱 자체 상단바 {% endcomment %}
+        
         <div class="app-top-bar">
-          <a href="{% url 'accounts:address_settings' %}" class="top-back-link" aria-label="뒤로 가기">
-            <img class="top-back" src="{% static 'img/chevron-left(gray).svg' %}" alt="뒤로 가기" />
+          <a href="/accounts/address/" class="top-back-link" aria-label="뒤로 가기">
+            <img class="top-back" src="/static/img/chevron-left(gray).svg" alt="뒤로 가기" />
           </a>
         </div>
 
@@ -41,14 +41,14 @@
             <div
               id="map"
               style="width:100%;height:100%;"
-              data-init-lat="{{ init_lat|default:'37.5665' }}"
-              data-init-lng="{{ init_lng|default:'126.9780' }}"
+              data-init-lat="37.5135149514856"
+              data-init-lng="127.053810388872"
             ></div>
 
-            <img class="center-pin" src="{% static 'img/map-pin.svg' %}" alt="" />
+            <img class="center-pin" src="/static/img/map-pin.svg" alt="" />
 
             <button class="btn-locate" id="btn-geolocate" type="button" aria-label="현재 위치로 이동">
-              <img src="{% static 'img/locate-fixed.svg' %}" alt="" />
+              <img src="/static/img/locate-fixed.svg" alt="" />
             </button>
           </div>
 
@@ -57,8 +57,8 @@
               <h2 class="modal-title" id="addr-title">주소를 불러오는 중…</h2>
               <p class="modal-sub" id="addr-sub" style="color:#666"></p>
 
-              <form id="save-direct" method="post" action="{% url 'accounts:address_save_from_map' %}">
-                {% csrf_token %}
+              <form id="save-direct" method="post" action="/accounts/address/save-from-map/">
+                <input type="hidden" name="csrfmiddlewaretoken" value="hdwo6BW3pHKQ7heJ50XcfHuLxQpB9xtE0h1ynrPZNaeCvcEWtZz2aECRRXf2kKsb">
                 <input type="hidden" name="name" id="f-name" />
                 <input type="hidden" name="l1"   id="f-l1" />
                 <input type="hidden" name="l2"   id="f-l2" />
@@ -82,7 +82,7 @@
                 </div>
 
                 <div class="check-alert" id="addrWarn">
-                  <img src="{% static 'img/triangle-alert.svg' %}" alt="" />
+                  <img src="/static/img/triangle-alert.svg" alt="" />
                   <p>지도의 표시와 실제 주소가 맞는지 확인해주세요</p>
                 </div>
 
@@ -95,6 +95,6 @@
         </div>
       </div>
     </div>
-    <script src="{% static 'js/address_pick_map.js' %}" defer></script>
+    <script src="/static/js/address_pick_map.js" defer></script>
   </body>
 </html>
