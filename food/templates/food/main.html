@@ -6,24 +6,118 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{% static 'css/main.css' %}" />
     <script src="{% static 'js/main.js' %}" defer></script>
-    <title>Main</title>
-</head>
-<body>
-    {% if user.is_authenticated %}
-        <div id="Container">
-            
-            <!-- 주소가 설정되지 않았을 때 모달창 띄움 -->
-            {% if not user.address %}
-            <div class="modal hidden">
-                <div class="modal-content">
-                    <div class="modal-icon">
+
+  </head>
+  <body>
+  {% if user.is_authenticated %}
+  <div class="container">
+    <!-- 주소 미설정 모달 -->
+    {% if not user.address %}
+    <div class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
                             <path d="M16 12V17.3333M16 22.6666H16.0133M28.9733 24L18.3067 5.33331C18.0741 4.92291 17.7368 4.58156 17.3292 4.34407C16.9217 4.10657 16.4584 3.98145 15.9867 3.98145C15.5149 3.98145 15.0517 4.10657 14.6441 4.34407C14.2365 4.58156 13.8992 4.92291 13.6667 5.33331L3 24C2.76491 24.4071 2.64164 24.8692 2.64268 25.3393C2.64372 25.8095 2.76903 26.271 3.00593 26.6771C3.24282 27.0832 3.58286 27.4194 3.99159 27.6517C4.40032 27.8841 4.86321 28.0042 5.33333 28H26.6667C27.1345 27.9995 27.594 27.8759 27.999 27.6417C28.404 27.4074 28.7403 27.0708 28.974 26.6655C29.2077 26.2602 29.3307 25.8005 29.3306 25.3326C29.3305 24.8648 29.2073 24.4052 28.9733 24Z" stroke="#D9D9D9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    <div class="modal-text">주소 설정 후 이용해주세요</div>
-                    <a href="{% url 'accounts:address_settings' %}"><button class="modal-btn">주소 설정하기</button></a>
-                </div>
+                        </svg>        </div>
+        <div class="modal-text">주소 설정 후 이용해주세요</div>
+        <a href="{% url 'accounts:address_settings' %}">
+          <button class="modal-btn">주소 설정하기</button>
+        </a>
+      </div>
+    </div>
+    {% endif %}
+
+
+      <div class="box">
+        <!-- 상단 상태바 -->
+        <div class="status-bar">
+          <p>19:20</p>
+          <div class="status1">
+            <img
+              class="status2"
+              src="{% static 'img/reception.svg' %}"
+              alt="reception"
+            />
+            <img class="status2" src="{% static 'img/wifi.svg' %}" alt="wifi" />
+            <img
+              class="status2"
+              src="{% static 'img/battery.svg' %}"
+              alt="battery"
+            />
+          </div>
+        </div>
+
+        <!-- 앱 자체 상단바 -->
+        <div class="app-top-bar">
+          <div class="userLoc">
+            <a
+              href="{% url 'accounts:address_settings' %}"
+              aria-label="주소 설정"
+            >
+              {% if user.address == None %}
+              <p>주소를 설정해주세요</p>
+              {% else %}
+              <p>{{ user.addr_level3 }}</p>
+              <img
+                src="{% static 'img/arrow-down.svg' %}"
+                class="downIcn"
+                alt="down"
+              />
+              {% endif %}
+            </a>
+          </div>
+
+          <div class="top-point">
+            <a
+              href="{% url 'food:cart_view' %}"
+              class="basket-container"
+              aria-label="장바구니"
+            >
+              <img
+                src="{% static 'img/basket.svg' %}"
+                class="basket"
+                alt="basket"
+              />
+              <span class="basket-count">{{ cart_items_count|default:0 }}</span>
+            </a>
+            <a href="{% url 'point:barcode' %}" aria-label="바코드">
+              <img
+                src="{% static 'img/lucide.svg' %}"
+                class="point"
+                alt="point"
+              />
+            </a>
+            <a href="{% url 'point:point_home' %}" aria-label="포인트">
+              <p class="mypoint">{{ total_point|default:"0" }} P</p>
+            </a>
+          </div>
+        </div>
+
+        <main class="app-body">
+          <section id="mainBoard">
+            <div class="bannerSelect">
+              <a
+                href="?tab=mart"
+                id="mart"
+                class="clickable {% if tab == 'mart' %}active{% endif %}"
+              >
+                <p>마트</p>
+              </a>
+              <a
+                href="?tab=cafe"
+                id="cafe"
+                class="clickable {% if tab == 'cafe' %}active{% endif %}"
+              >
+                <p>카페</p>
+              </a>
+              <a
+                href="?tab=trad"
+                id="trad"
+                class="clickable {% if tab == 'trad' %}active{% endif %}"
+              >
+                <p>시장</p>
+              </a>
+
             </div>
             {% endif %}
             
