@@ -1,5 +1,3 @@
-
-
 // 최신순/가나다순
 document.addEventListener("DOMContentLoaded", () => {
   const latestTab = document.querySelector(".search-filter .lately");
