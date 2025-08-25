@@ -1,5 +1,3 @@
-
-
 document.addEventListener("DOMContentLoaded", () => {
   const list = document.querySelector(".search-result-list");
   if (!list) return;
