@@ -4,10 +4,10 @@ a {
 }
 
 body {
-  background-color: #000000;
   display: flex;
   justify-content: center;
   align-items: center;
+  
 }
 
 #root {
@@ -24,6 +24,7 @@ body {
   height: 852px;
   margin: 0 auto;
   background-color: white;
+  
 }
 
 ::-webkit-scrollbar {
