@@ -475,3 +475,65 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (typeof initRangeDropdown === "function") initRangeDropdown();
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+  const latestTab = document.querySelector(".search-filter .lately");
+  const alphaTab  = document.querySelector(".search-filter .abc");
+  const list      = document.querySelector(".list-set");
+  if (!latestTab || !alphaTab || !list) return;
+
+  const items = Array.from(list.querySelectorAll(".recipes_list"));
+  items.forEach((el, i) => (el._idx = i));
+
+  const getTitle = (el) => el.querySelector(".menu_name")?.textContent.trim() || "";
+  const getDate  = (el) => {
+    const raw = el.querySelector(".menu_date")?.textContent.trim() || "";
+    const m = raw.match(/(\d{4})[.\-/](\d{2})[.\-/](\d{2})/);
+    return m ? new Date(`${m[1]}-${m[2]}-${m[3]}`).getTime() : 0;
+  };
+
+  // ★ 활성 표시: .is-active 뿐 아니라 .on 도 함께 토글
+  const setActive = (activeEl) => {
+    [latestTab, alphaTab].forEach((el) => {
+      const on = el === activeEl;
+      el.classList.toggle("is-active", on);
+      el.classList.toggle("on", on);                 // ← 핵심
+      el.setAttribute("aria-selected", on ? "true" : "false");
+      el.setAttribute("role", "tab");
+    });
+    latestTab.parentElement?.setAttribute("role", "tablist");
+  };
+
+  const sortList = (mode) => {
+    const sorted = items.slice().sort((a, b) => {
+      return mode === "alpha"
+        ? getTitle(a).localeCompare(getTitle(b), "ko", { sensitivity: "base", numeric: true })
+        : getDate(b) - getDate(a);
+    });
+    sorted.forEach((el) => list.appendChild(el));
+  };
+
+  // ★ 초기 모드: URL ?sort= 또는 기존 클래스(on/is-active)에서 결정
+  const getInitialMode = () => {
+    const s = new URLSearchParams(location.search).get("sort");
+    if (s === "alpha" || s === "latest") return s;
+    if (alphaTab.classList.contains("on") || alphaTab.classList.contains("is-active")) return "alpha";
+    return "latest";
+  };
+
+  const applySort = (mode) => {
+    setActive(mode === "alpha" ? alphaTab : latestTab);
+    sortList(mode);
+  };
+
+  latestTab.addEventListener("click", (e) => {
+    // e.preventDefault(); // JS만으로 동작시키고 싶으면 주석 해제
+    applySort("latest");
+  });
+  alphaTab.addEventListener("click", (e) => {
+    // e.preventDefault();
+    applySort("alpha");
+  });
+
+  applySort(getInitialMode()); // 초기 표시/정렬
+});
